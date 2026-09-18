@@ -1,6 +1,32 @@
 use dioxus::prelude::*;
 
 #[component]
+pub fn IconPlay(color: String) -> Element {
+    rsx! {
+        svg {
+            width: "16",
+            height: "16",
+            view_box: "0 0 24 24",
+            fill: "{color}",
+            path { d: "M7 5v14l11-7z" }
+        }
+    }
+}
+
+#[component]
+pub fn IconStop(color: String) -> Element {
+    rsx! {
+        svg {
+            width: "16",
+            height: "16",
+            view_box: "0 0 24 24",
+            fill: "{color}",
+            rect { x: "6", y: "6", width: "12", height: "12", rx: "2" }
+        }
+    }
+}
+
+#[component]
 pub fn IconMic(color: String, size: u32) -> Element {
     rsx! {
         svg {

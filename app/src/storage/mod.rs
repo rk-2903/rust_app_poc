@@ -1,11 +1,13 @@
-//! Recording metadata + (future) transcript storage. Plain Rust — no
-//! `dioxus::prelude` — so it stays testable independent of the UI layer.
+//! Recording metadata + audio + (future) transcript storage. Plain Rust —
+//! no `dioxus::prelude` — so it stays testable independent of the UI layer.
 //!
-//! Persistence to disk (WAV files + an on-disk index) is still a pending
-//! Phase 1 item; today this only holds in-memory mock data plus whatever
-//! real recordings are made this session.
+//! The recordings *list* (the in-memory index of `RecordingEntry`) doesn't
+//! survive an app restart yet — that's the one remaining Phase 1 item. The
+//! audio *file* behind a real recording is genuinely written to disk via
+//! `wav::save_recording`.
 
 mod recording_entry;
+pub mod wav;
 
 pub use recording_entry::{mock_recordings, RecordingEntry, Speaker};
 

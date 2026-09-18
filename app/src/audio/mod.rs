@@ -1,12 +1,12 @@
 //! Mic capture. Plain Rust — no `dioxus::prelude` — so it's usable and
 //! testable independent of the UI layer.
 
+mod ios_session;
+pub mod player;
 mod recorder;
 mod resample;
 
-pub use recorder::Recorder;
+pub use recorder::{Recorder, TARGET_SAMPLE_RATE};
 
-// `RecorderError` and `TARGET_SAMPLE_RATE` aren't named outside this module
-// yet (errors are surfaced via `Display`; duration math stays behind
-// `Recorder::duration_secs`) — re-export them once something actually needs
-// the type/value, not preemptively.
+// `RecorderError` isn't named outside this module yet (errors are surfaced
+// via `Display`) — re-export it once something needs the type itself.

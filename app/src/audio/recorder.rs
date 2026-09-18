@@ -136,6 +136,8 @@ fn build_input_stream(
     samples: Arc<std::sync::Mutex<Vec<f32>>>,
     sample_count: Arc<AtomicUsize>,
 ) -> Result<cpal::Stream, RecorderError> {
+    super::ios_session::configure_audio_session();
+
     let host = cpal::default_host();
     let device = host
         .default_input_device()

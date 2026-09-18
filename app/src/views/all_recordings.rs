@@ -50,7 +50,13 @@ pub fn AllRecordings() -> Element {
                     on_cancel: move |_| confirming_id.set(None),
                     on_confirm: move |_| {
                         if let Some(id) = confirming_id.read().clone() {
-                            state.recordings.write().retain(|r| r.id != id);
+                            let mut recordings = state.recordings.write();
+                            if let Some(entry) = recordings.iter().find(|r| r.id == id) {
+                                if let Some(path) = &entry.audio_path {
+                                    let _ = std::fs::remove_file(path);
+                                }
+                            }
+                            recordings.retain(|r| r.id != id);
                         }
                         confirming_id.set(None);
                     },

@@ -1,14 +1,20 @@
-/// One saved recording: metadata + (once Phase 2 lands) its transcript.
+/// One saved recording: metadata, its audio file (if any), and (once
+/// Phase 2 lands) its transcript.
 ///
-/// Persisted storage (WAV file + an on-disk index) is still a pending Phase 1
-/// item — for now these live only in memory, seeded with mock entries for
-/// the UI, per the design in `Scribe_mobile_prototype.html`.
+/// The on-disk index (so this list survives an app restart) is still a
+/// pending Phase 1 item — for now the list itself lives only in memory,
+/// seeded with mock entries for the UI, per the design in
+/// `Scribe_mobile_prototype.html`. The audio *file* a real recording
+/// produces is genuinely written to disk (`storage::wav::save_recording`);
+/// only the metadata pointing to it doesn't survive a restart yet.
 #[derive(Debug, Clone, PartialEq)]
 pub struct RecordingEntry {
     pub id: String,
     pub title: String,
     pub date_label: String,
     pub duration_label: String,
+    /// `None` for the mock entries (there's no real audio behind them).
+    pub audio_path: Option<String>,
     /// Empty means "no transcript yet" (real recordings, before Phase 2)
     /// rather than a recording that failed to transcribe.
     pub transcript: Vec<TranscriptTurn>,
@@ -56,6 +62,7 @@ pub fn mock_recordings() -> Vec<RecordingEntry> {
             title: "Follow-up visit".to_string(),
             date_label: "Today".to_string(),
             duration_label: "12 min".to_string(),
+            audio_path: None,
             transcript: vec![
                 turn(Doctor, "10:02 AM", "How have you been feeling since we adjusted the dosage last month?"),
                 turn(Patient, "10:03 AM", "Better, actually. The headaches are almost gone, but I've been a little more tired in the afternoons."),
@@ -69,6 +76,7 @@ pub fn mock_recordings() -> Vec<RecordingEntry> {
             title: "New patient intake".to_string(),
             date_label: "Tuesday".to_string(),
             duration_label: "24 min".to_string(),
+            audio_path: None,
             transcript: vec![
                 turn(Doctor, "9:00 AM", "Let's start with your medical history — any conditions I should know about?"),
                 turn(Patient, "9:01 AM", "Just seasonal allergies, and my mother has type 2 diabetes."),
@@ -79,6 +87,7 @@ pub fn mock_recordings() -> Vec<RecordingEntry> {
             title: "Post-op check-in".to_string(),
             date_label: "Sep 12".to_string(),
             duration_label: "9 min".to_string(),
+            audio_path: None,
             transcript: vec![
                 turn(Doctor, "2:15 PM", "How's the incision site looking today?"),
                 turn(Patient, "2:15 PM", "Much better, barely any swelling now."),
@@ -89,6 +98,7 @@ pub fn mock_recordings() -> Vec<RecordingEntry> {
             title: "Medication review".to_string(),
             date_label: "Sep 9".to_string(),
             duration_label: "15 min".to_string(),
+            audio_path: None,
             transcript: vec![],
         },
         RecordingEntry {
@@ -96,6 +106,7 @@ pub fn mock_recordings() -> Vec<RecordingEntry> {
             title: "Annual physical".to_string(),
             date_label: "Sep 3".to_string(),
             duration_label: "31 min".to_string(),
+            audio_path: None,
             transcript: vec![],
         },
     ]

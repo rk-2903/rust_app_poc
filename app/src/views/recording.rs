@@ -48,8 +48,16 @@ pub fn Recording() -> Element {
         let mut recorder = state.recorder.write();
         recorder.stop();
         let duration_secs = recorder.duration_secs();
-        recorder.take_samples();
+        let samples = recorder.take_samples();
         drop(recorder);
+
+        let audio_path = match crate::storage::wav::save_recording(&samples, crate::audio::TARGET_SAMPLE_RATE) {
+            Ok(path) => Some(path.to_string_lossy().into_owned()),
+            Err(err) => {
+                eprintln!("[recording] failed to save WAV: {err}");
+                None
+            }
+        };
 
         let id = format!("real-{}", instant_id());
         state.recordings.write().insert(
@@ -59,6 +67,7 @@ pub fn Recording() -> Element {
                 title: "New recording".to_string(),
                 date_label: "Just now".to_string(),
                 duration_label: format_duration_label(duration_secs),
+                audio_path,
                 transcript: Vec::new(),
             },
         );

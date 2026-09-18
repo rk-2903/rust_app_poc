@@ -1,7 +1,9 @@
+use std::time::Duration;
+
 use dioxus::prelude::*;
 
 use crate::app_state::use_app_state;
-use crate::components::{ConfirmDialog, IconBack, IconTrash};
+use crate::components::{ConfirmDialog, IconBack, IconPlay, IconStop, IconTrash};
 use crate::storage::Speaker;
 use crate::Route;
 
@@ -10,6 +12,19 @@ pub fn Transcript(id: String) -> Element {
     let mut state = use_app_state();
     let nav = use_navigator();
     let mut confirming = use_signal(|| false);
+    let mut is_playing = use_signal(|| false);
+
+    // `AVAudioPlayer` finishes on its own when the clip ends; poll so the
+    // button falls back out of "Playing" state without needing a callback
+    // wired all the way from the platform layer.
+    use_future(move || async move {
+        loop {
+            if is_playing() && !crate::audio::player::is_playing() {
+                is_playing.set(false);
+            }
+            tokio::time::sleep(Duration::from_millis(300)).await;
+        }
+    });
 
     let entry = state.recordings.read().iter().find(|r| r.id == id).cloned();
 
@@ -20,6 +35,22 @@ pub fn Transcript(id: String) -> Element {
                 Link { to: Route::Home {}, class: "link", "Back to Home" }
             }
         };
+    };
+
+    let toggle_playback = {
+        let audio_path = entry.audio_path.clone();
+        move |_| {
+            let Some(path) = audio_path.clone() else {
+                return;
+            };
+            if is_playing() {
+                crate::audio::player::stop();
+                is_playing.set(false);
+            } else {
+                crate::audio::player::play(&path);
+                is_playing.set(true);
+            }
+        }
     };
 
     rsx! {
@@ -37,6 +68,20 @@ pub fn Transcript(id: String) -> Element {
                     "aria-label": "Delete recording",
                     onclick: move |_| confirming.set(true),
                     IconTrash { color: "var(--ink)".to_string() }
+                }
+            }
+
+            if entry.audio_path.is_some() {
+                div { class: "playback-row",
+                    button { class: "play-button", onclick: toggle_playback,
+                        if is_playing() {
+                            IconStop { color: "var(--ink)".to_string() }
+                            "Stop"
+                        } else {
+                            IconPlay { color: "var(--ink)".to_string() }
+                            "Play recording"
+                        }
+                    }
                 }
             }
 
@@ -82,6 +127,10 @@ pub fn Transcript(id: String) -> Element {
                     confirm_label: "Delete".to_string(),
                     on_cancel: move |_| confirming.set(false),
                     on_confirm: move |_| {
+                        crate::audio::player::stop();
+                        if let Some(path) = &entry.audio_path {
+                            let _ = std::fs::remove_file(path);
+                        }
                         state.recordings.write().retain(|r| r.id != id);
                         confirming.set(false);
                         nav.push(Route::Home {});
