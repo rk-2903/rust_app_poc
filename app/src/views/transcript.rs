@@ -99,11 +99,16 @@ pub fn Transcript(id: String) -> Element {
             }
 
             div { class: "transcript-body",
-                if entry.transcript.is_empty() {
-                    div { class: "transcript-empty",
-                        "No transcript yet — on-device transcription lands in Phase 2."
+                if entry.transcribing {
+                    div { class: "transcript-empty", "Transcribing on-device… this can take a minute." }
+                } else if let Some(text) = &entry.transcript_text {
+                    if text.is_empty() {
+                        div { class: "transcript-empty", "No speech detected." }
+                    } else {
+                        div { class: "turn-text", "{text}" }
+                        div { class: "transcript-footer", "Transcribed on-device using Moonshine Tiny" }
                     }
-                } else {
+                } else if !entry.transcript.is_empty() {
                     for turn in entry.transcript.iter() {
                         div { class: "turn",
                             div { class: "turn-header",
@@ -117,6 +122,8 @@ pub fn Transcript(id: String) -> Element {
                         }
                     }
                     div { class: "transcript-footer", "Transcribed on-device using Moonshine Tiny" }
+                } else {
+                    div { class: "transcript-empty", "No transcript yet." }
                 }
             }
 

@@ -69,9 +69,27 @@ pub fn Recording() -> Element {
                 duration_label: format_duration_label(duration_secs),
                 audio_path,
                 transcript: Vec::new(),
+                transcript_text: None,
+                transcribing: true,
             },
         );
-        nav.push(Route::Transcript { id });
+        nav.push(Route::Transcript { id: id.clone() });
+
+        // Transcription is CPU inference (tens of seconds on-device) — runs
+        // on tokio's blocking pool so it doesn't stall the UI, and updates
+        // this entry in place whenever it finishes.
+        let mut recordings = state.recordings;
+        spawn(async move {
+            let text = tokio::task::spawn_blocking(move || crate::transcription::transcribe(&samples))
+                .await
+                .ok()
+                .and_then(|result| result.ok());
+            let mut list = recordings.write();
+            if let Some(entry) = list.iter_mut().find(|r| r.id == id) {
+                entry.transcript_text = text;
+                entry.transcribing = false;
+            }
+        });
     };
 
     rsx! {

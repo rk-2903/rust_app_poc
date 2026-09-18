@@ -11,6 +11,14 @@ dioxus = { version = "0.7.1", features = ["router"] }
 cpal = "0.18"
 hound = "3.5"
 tokio = { version = "1", features = ["time"] }
+# Pinned to the 0.22.0-pre.3 workspace release (not yet stable) because it
+# includes "Fix uncompilable codegen for Shape/tensor mixed Concat"
+# (tracel-ai/burn-onnx#455, landed 2026-08-18) — Moonshine's decoder graph
+# hits exactly that codegen bug on the stable 0.21.0 release. Move back to a
+# stable version once 0.22 ships.
+burn = { version = "=0.22.0-pre.3", default-features = false, features = ["ndarray"] }
+tokenizers = { version = "0.23.2", default-features = false, features = ["unstable_wasm"] }
+burn-store = "=0.22.0-pre.3"
 
 [target.'cfg(target_os = "ios")'.dependencies]
 objc2 = "0.6"
@@ -18,8 +26,17 @@ block2 = "0.6"
 objc2-avf-audio = "0.3"
 objc2-foundation = { version = "0.3", features = ["NSString", "NSURL"] }
 
+[build-dependencies]
+burn-onnx = "=0.22.0-pre.3"
+
 [features]
 default = ["mobile"]
 web = ["dioxus/web"]
 desktop = ["dioxus/desktop"]
 mobile = ["dioxus/mobile"]
+
+# See vendor/README.md: fixes a real panic in burn-std 0.22.0-pre.3's
+# misaligned-bytes fallback when loading burnpack (.bpk) weights. Remove
+# once a burn release ships with the upstream fix.
+[patch.crates-io]
+burn-std = { path = "vendor/burn-std" }

@@ -1,0 +1,10 @@
+# `gemm-f16` (pulled in by burn-ndarray) uses inline ARM64 assembly that
+# needs the `fp16` CPU feature (ARMv8.2 half-precision, "fullfp16" in LLVM's
+# naming). Every real iPhone that can run this app (A11/2017+) has it, but
+# rustc's default codegen target for aarch64-apple-ios doesn't assume it's
+# present, so cross-compiling for a real device fails without this — the
+# simulator target builds fine regardless since it runs natively on the
+# (fp16-capable) Apple Silicon build machine, which is why this only shows
+# up on `--device` builds.
+[target.aarch64-apple-ios]
+rustflags = ["-C", "target-feature=+fp16"]

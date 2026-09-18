@@ -15,9 +15,18 @@ pub struct RecordingEntry {
     pub duration_label: String,
     /// `None` for the mock entries (there's no real audio behind them).
     pub audio_path: Option<String>,
-    /// Empty means "no transcript yet" (real recordings, before Phase 2)
-    /// rather than a recording that failed to transcribe.
+    /// Speaker-attributed turns — only ever populated for the mock entries
+    /// today. Real transcription (Phase 2) doesn't diarize by speaker yet
+    /// (that's Phase 4), so real recordings' text goes in `transcript_text`
+    /// instead.
     pub transcript: Vec<TranscriptTurn>,
+    /// The flat transcript text for a real (non-mock) recording, once
+    /// Phase 2 transcription finishes. `None` while `transcribing` or if
+    /// transcription hasn't run / failed.
+    pub transcript_text: Option<String>,
+    /// Set right after Stop, cleared when background transcription (which
+    /// takes real time — tens of seconds on-device) finishes.
+    pub transcribing: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -63,6 +72,8 @@ pub fn mock_recordings() -> Vec<RecordingEntry> {
             date_label: "Today".to_string(),
             duration_label: "12 min".to_string(),
             audio_path: None,
+            transcript_text: None,
+            transcribing: false,
             transcript: vec![
                 turn(Doctor, "10:02 AM", "How have you been feeling since we adjusted the dosage last month?"),
                 turn(Patient, "10:03 AM", "Better, actually. The headaches are almost gone, but I've been a little more tired in the afternoons."),
@@ -77,6 +88,8 @@ pub fn mock_recordings() -> Vec<RecordingEntry> {
             date_label: "Tuesday".to_string(),
             duration_label: "24 min".to_string(),
             audio_path: None,
+            transcript_text: None,
+            transcribing: false,
             transcript: vec![
                 turn(Doctor, "9:00 AM", "Let's start with your medical history — any conditions I should know about?"),
                 turn(Patient, "9:01 AM", "Just seasonal allergies, and my mother has type 2 diabetes."),
@@ -88,6 +101,8 @@ pub fn mock_recordings() -> Vec<RecordingEntry> {
             date_label: "Sep 12".to_string(),
             duration_label: "9 min".to_string(),
             audio_path: None,
+            transcript_text: None,
+            transcribing: false,
             transcript: vec![
                 turn(Doctor, "2:15 PM", "How's the incision site looking today?"),
                 turn(Patient, "2:15 PM", "Much better, barely any swelling now."),
@@ -99,6 +114,8 @@ pub fn mock_recordings() -> Vec<RecordingEntry> {
             date_label: "Sep 9".to_string(),
             duration_label: "15 min".to_string(),
             audio_path: None,
+            transcript_text: None,
+            transcribing: false,
             transcript: vec![],
         },
         RecordingEntry {
@@ -107,6 +124,8 @@ pub fn mock_recordings() -> Vec<RecordingEntry> {
             date_label: "Sep 3".to_string(),
             duration_label: "31 min".to_string(),
             audio_path: None,
+            transcript_text: None,
+            transcribing: false,
             transcript: vec![],
         },
     ]

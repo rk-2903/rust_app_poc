@@ -9,6 +9,8 @@ mod audio;
 mod components;
 /// Recording metadata + (future) transcript storage.
 mod storage;
+/// On-device transcription (Moonshine Tiny via burn-onnx).
+mod transcription;
 /// Route-level screens.
 mod views;
 
