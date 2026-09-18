@@ -1,0 +1,27 @@
+[application]
+
+[bundle]
+identifier = "com.rahulkumar.conversationcapture"
+
+[permissions]
+microphone = { description = "Conversation Capture needs microphone access to record and transcribe your conversations." }
+
+[web.app]
+
+# HTML title tag content
+title = "Conversation Capture"
+
+# include `assets` in web platform
+[web.resource]
+
+# Additional CSS style files
+style = []
+
+# Additional JavaScript files
+script = []
+
+[web.resource.dev]
+
+# Javascript code file
+# serve: [dev-server] only
+script = []
