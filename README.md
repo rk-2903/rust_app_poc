@@ -74,14 +74,38 @@ lift in Phase 2 below.
       `NSMicrophoneUsageDescription` is set (already done above), so
       there's nothing to build here independent of the cpal wiring below.
 
-### Phase 1 — Mic capture on-device
+### Phase 1 — Mic capture, local storage & recordings list
 - [ ] Add cpal; confirm it opens the default input device on a **real**
-      Android device and a real iPhone (simulators/emulators often don't
-      expose a working mic)
-- [ ] Reuse the dedicated-thread recorder pattern (cpal streams must stay
+      iPhone and a real Android device (simulators/emulators often don't
+      expose a working mic — verified so far only that it fails gracefully
+      on the iOS simulator's fake device; real-iPhone confirmation pending)
+- [x] Reuse the dedicated-thread recorder pattern (cpal streams must stay
       on the thread that creates them)
-- [ ] Downmix to mono + resample to 16kHz
-- [ ] Wire Start/Stop UI to the recorder
+- [x] Downmix to mono + resample to 16kHz
+- [x] Wire Start/Stop UI to the recorder
+- [ ] On stop, WAV-encode the captured samples (`hound`) and save to the
+      app's local storage directory, keyed by a timestamp-based ID —
+      `RecordingEntry` (the schema below) currently holds a real recording's
+      metadata in memory only, not yet its audio on disk
+- [x] Design the storage schema — `RecordingEntry { id, title, date_label,
+      duration_label, transcript: Vec<TranscriptTurn> }` in
+      `app/src/storage/`, so Phase 2 attaches a transcript to an existing
+      entry instead of redesigning storage. Still in-memory only (seeded
+      with mock entries matching the design); moving it to on-disk
+      persistence is the remaining item above.
+- [x] Add an "All Recordings" list view (past recordings by date/duration,
+      tap-through to a Transcript detail screen) — the app's first
+      multi-screen navigation, so this is also where `views/` + the
+      `router` feature got introduced per
+      [dioxus-conventions](.claude/skills/dioxus-conventions/SKILL.md)
+- [x] Add delete for a recording (from the list and its detail screen),
+      gated behind a confirmation dialog; on confirm, removes the entry
+      (and once Phase 2 adds transcripts + Phase 1's disk storage lands,
+      will remove the WAV file too) from the in-memory store
+- [x] UI redesigned end-to-end to match `Scribe_mobile_prototype.html`
+      (Home, All Recordings, Recording, Transcript, Settings, No Mic
+      Access) — verified on the iOS simulator, the real iPhone, and a web
+      build (used for precise DOM-level interaction testing)
 
 ### Phase 2 — On-device transcription
 - [ ] Run `burn-onnx` against Moonshine Tiny's encoder graph and its
@@ -99,11 +123,11 @@ lift in Phase 2 below.
       quantized export if it's too slow
 
 ### Phase 3 — Full conversation capture (this project's phase-1 goal)
-- [ ] Wire Stop → transcribe → display transcript, fully in-process
+- [ ] Wire Stop → transcribe → attach the transcript to the recording's
+      entry in the Phase 1 storage schema, and show it in the recording's
+      detail screen
 - [ ] Handle app backgrounding/interruptions during recording gracefully
       (phone calls, notifications)
-- [ ] Basic local storage of past recordings/transcripts so a session
-      survives an app restart
 
 ### Phase 4 — Semantic capture (doctor/patient style segmentation)
 - [ ] Add turn/speaker segmentation on top of the transcript (start with
@@ -112,6 +136,21 @@ lift in Phase 2 below.
 - [ ] Tag segments by role or topic (doctor vs. patient), decide whether
       this is rule-based, a small classifier, or an LLM call on the
       transcript
+- [ ] **Future scope: multi-speaker diarization** ("who spoke when" across
+      3+ people, not just doctor/patient). This is a distinct technique
+      from transcription, not a byproduct of it:
+      1. A small speaker-embedding model (ECAPA-TDNN/x-vector/d-vector
+         style) converts short rolling audio windows into a fixed-size
+         "voiceprint" vector, independent of what's being said.
+      2. Cluster embeddings — segments with similar voiceprints get grouped
+         under an anonymous label (Speaker 1/2/3); the speaker count can be
+         given or estimated from the clustering itself.
+      3. Optional named identification is a separate step on top: an
+         enrollment flow (record a short reference sample per known
+         person) to match new voiceprints against.
+      Needs a second on-device model imported the same way as Moonshine
+      (via `burn-onnx`) plus a clustering step — real added scope, not
+      free from Phase 2's transcription work.
 - [ ] Surface tagged segments in the UI (collapsible sections,
       highlighting)
 

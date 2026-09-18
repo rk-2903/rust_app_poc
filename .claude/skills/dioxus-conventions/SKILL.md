@@ -21,7 +21,9 @@ app/
       home_screen.rs
     views/              # route-level screens (add once there is >1 screen + a Router)
       mod.rs
-    audio/              # Phase 1+: cpal capture, resampling — plain Rust, no dioxus::prelude
+    audio/              # Phase 1: cpal capture, resampling — plain Rust, no dioxus::prelude
+      mod.rs
+    storage/            # Phase 1: WAV encoding + the recording/transcript index — plain Rust
       mod.rs
     transcription/       # Phase 2+: burn-onnx models, decode loop — plain Rust, no dioxus::prelude
       mod.rs
@@ -37,15 +39,16 @@ Rules:
 - `components/mod.rs` and `views/mod.rs` only declare `mod` and `pub use` —
   never put component logic directly in a `mod.rs`.
 - Don't create `views/` or add the `router` feature until there are genuinely
-  multiple navigable screens (roadmap Phase 3 — recording view vs. transcript
-  history). Until then a single root `App` rendering one component from
-  `components/` is correct; adding a router earlier is premature abstraction.
-- Platform/ML code that doesn't touch `dioxus::prelude` (cpal streams, the
-  Burn/ONNX decode loop, WAV encoding) lives in its own module (`audio/`,
-  `transcription/`), not inside a component file. Components call into it
-  through plain function calls or a signal the module updates. This keeps the
-  non-UI logic unit-testable with plain `cargo test`, independent of any
-  renderer.
+  multiple navigable screens (roadmap Phase 1 — the recording screen vs. the
+  recordings list). Until then a single root `App` rendering one component
+  from `components/` is correct; adding a router earlier is premature
+  abstraction.
+- Platform/ML/IO code that doesn't touch `dioxus::prelude` (cpal streams,
+  WAV encoding, the recordings index, the Burn/ONNX decode loop) lives in
+  its own module (`audio/`, `storage/`, `transcription/`), not inside a
+  component file. Components call into it through plain function calls or a
+  signal the module updates. This keeps the non-UI logic unit-testable with
+  plain `cargo test`, independent of any renderer.
 
 ## Naming
 
