@@ -15,4 +15,29 @@ body {
     align-items: center;
     text-align: center;
     padding: 0 24px;
+    gap: 24px;
+}
+
+#recorder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+#recorder button {
+    font-size: 1.1rem;
+    padding: 14px 28px;
+    border-radius: 999px;
+    border: none;
+    background-color: #4f7cff;
+    color: #ffffff;
+}
+
+#recorder button:active {
+    background-color: #3d63d6;
+}
+
+#recorder .error {
+    color: #ff6b6b;
 }

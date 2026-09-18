@@ -2,6 +2,8 @@ use dioxus::prelude::*;
 
 use components::HomeScreen;
 
+/// Mic capture (cpal), independent of the UI layer.
+mod audio;
 /// Shared UI components for the app.
 mod components;
 
