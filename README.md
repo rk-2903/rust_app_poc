@@ -84,19 +84,28 @@ lift in Phase 2 below.
 - [x] Downmix to mono + resample to 16kHz
 - [x] Wire Start/Stop UI to the recorder
 - [ ] On stop, WAV-encode the captured samples (`hound`) and save to the
-      app's local storage directory, keyed by a timestamp-based ID
-- [ ] Design the storage schema now — recording ID → audio file path +
-      optional transcript field (small JSON index or SQLite) — so Phase 2
-      attaches a transcript to an existing entry instead of redesigning
-      storage later
-- [ ] Add a "Recordings" list view (past recordings by date/duration,
-      tap-through to a detail screen) — the first second screen in the
-      app, so this is also where `views/` + the `router` feature get
-      introduced per [dioxus-conventions](.claude/skills/dioxus-conventions/SKILL.md)
-- [ ] Add delete for a recording (from the list and/or its detail screen),
-      gated behind a confirmation prompt; on confirm, remove both the WAV
-      file and its transcript field (once Phase 2 adds transcripts) from
-      device storage and the index
+      app's local storage directory, keyed by a timestamp-based ID —
+      `RecordingEntry` (the schema below) currently holds a real recording's
+      metadata in memory only, not yet its audio on disk
+- [x] Design the storage schema — `RecordingEntry { id, title, date_label,
+      duration_label, transcript: Vec<TranscriptTurn> }` in
+      `app/src/storage/`, so Phase 2 attaches a transcript to an existing
+      entry instead of redesigning storage. Still in-memory only (seeded
+      with mock entries matching the design); moving it to on-disk
+      persistence is the remaining item above.
+- [x] Add an "All Recordings" list view (past recordings by date/duration,
+      tap-through to a Transcript detail screen) — the app's first
+      multi-screen navigation, so this is also where `views/` + the
+      `router` feature got introduced per
+      [dioxus-conventions](.claude/skills/dioxus-conventions/SKILL.md)
+- [x] Add delete for a recording (from the list and its detail screen),
+      gated behind a confirmation dialog; on confirm, removes the entry
+      (and once Phase 2 adds transcripts + Phase 1's disk storage lands,
+      will remove the WAV file too) from the in-memory store
+- [x] UI redesigned end-to-end to match `Scribe_mobile_prototype.html`
+      (Home, All Recordings, Recording, Transcript, Settings, No Mic
+      Access) — verified on the iOS simulator, the real iPhone, and a web
+      build (used for precise DOM-level interaction testing)
 
 ### Phase 2 — On-device transcription
 - [ ] Run `burn-onnx` against Moonshine Tiny's encoder graph and its
