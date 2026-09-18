@@ -13,6 +13,16 @@ app/
 Follow [.claude/skills/dioxus-conventions](../.claude/skills/dioxus-conventions/SKILL.md) when adding
 screens or restructuring `src/`.
 
+## First-time setup
+
+Fetch the Moonshine Tiny ONNX weights (encoder + decoder, ~109MB, not
+committed to git — `burn-onnx` converts them into native Burn code at
+build time via `build.rs`):
+
+```bash
+./scripts/download_models.sh
+```
+
 ## Running the app
 
 Make sure `dx`/`cargo` are on your PATH first (new terminal tab, or `source ~/.zshrc`).

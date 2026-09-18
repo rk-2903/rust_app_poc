@@ -108,19 +108,37 @@ lift in Phase 2 below.
       build (used for precise DOM-level interaction testing)
 
 ### Phase 2 — On-device transcription
-- [ ] Run `burn-onnx` against Moonshine Tiny's encoder graph and its
-      decoder graph separately, generating two native Burn models
-- [ ] Write the decode loop by hand: feed the encoder's output into the
+- [x] Run `burn-onnx` against Moonshine Tiny's encoder graph and its
+      decoder graph separately, generating two native Burn models. Uses the
+      **float** export, not quantized — the quantized ONNX export uses
+      `DynamicQuantizeLinear`/`QLinearConv`, which `burn-onnx` doesn't
+      support yet; float only needs ops it fully supports.
+      Pinned to `burn`/`burn-onnx` **0.22.0-pre.3** (pre-release, not
+      stable) — stable 0.21.0's codegen has a real bug on Moonshine's
+      decoder graph, fixed upstream but not yet in a stable release. That
+      pre-release has its own bug (a panic loading burnpack weights),
+      patched locally in `app/vendor` — see `app/vendor/README.md` for
+      exactly what/why and when to remove it. Revisit both pins once 0.22
+      ships stable.
+- [x] Write the decode loop by hand: feed the encoder's output into the
       decoder, track the KV cache across steps, stop at the end-of-sequence
-      token
-- [ ] Start on the `ndarray` backend; benchmark before considering `wgpu`
-- [ ] Decide model distribution: bundle the ~190MB (or smaller quantized)
-      weights in the app package vs. download on first launch
-- [ ] Run inference in-process on a background thread/task so the UI stays
-      responsive
+      token — `app/src/transcription/model.rs` + `decode.rs` (the token
+      selection logic is pure/unit-tested independent of Burn)
+- [x] Start on the `ndarray` backend; benchmark before considering `wgpu` —
+      on `ndarray`; a real speed benchmark (see last item) is still open
+- [x] Decide model distribution: bundle the ~110MB (float, not ~190MB —
+      smaller than expected) weights + tokenizer in the app package,
+      embedded via `include_bytes!` at compile time (not downloaded)
+- [x] Run inference in-process on a background thread/task so the UI stays
+      responsive — `tokio::task::spawn_blocking` from Stop, wired in
+      `app/src/views/recording.rs`
 - [ ] Benchmark transcription time for a ~1 minute clip on a real
       mid-range Android phone and a real iPhone; fall back to a smaller
-      quantized export if it's too slow
+      quantized export if it's too slow. So far only know it's ~70s for a
+      **1-second silent clip** in an unoptimized **debug** build on the Mac
+      dev machine (not the iPhone) — not representative of real timing;
+      needs a release build, a real device, and real speech to mean
+      anything
 
 ### Phase 3 — Full conversation capture (this project's phase-1 goal)
 - [ ] Wire Stop → transcribe → attach the transcript to the recording's
@@ -191,13 +209,21 @@ lift in Phase 2 below.
    installs have no such expiry.
 
 ## Open decisions to revisit
-- Whether Moonshine Tiny's ONNX ops all import cleanly through
-  `burn-onnx` as-is, or whether some need custom operator hooks
+- ~~Whether Moonshine Tiny's ONNX ops all import cleanly through
+  `burn-onnx` as-is~~ — resolved: yes, on the **float** export with
+  `burn-onnx` 0.22.0-pre.3 (not the quantized export — see Phase 2). No
+  custom operator hooks needed.
+- ~~Bundled vs. downloaded model weights~~ — resolved: bundled
+  (`include_bytes!` at compile time)
 - `ndarray` vs `wgpu` backend for mobile, needs real-device benchmarking
+  (real-speech, release-build timing is still completely open — see Phase 2)
 - Model size vs. accuracy vs. app size trade-off (Tiny vs. Base, quantized
-  vs. full precision)
-- Bundled vs. downloaded model weights
+  vs. full precision) — still using Tiny/float; revisit once quantized
+  import is supported upstream or timing demands it
 - Whether semantic segmentation runs on-device or calls out to a server
+- Whether to move off the `burn`/`burn-onnx`/`burn-std` pre-release pins
+  and drop the local `burn-std` patch once 0.22 stabilizes (see
+  `app/vendor/README.md`)
 
 ## Note on data sensitivity
 Since the target use case is doctor/patient conversations, treat
