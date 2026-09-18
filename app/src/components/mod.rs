@@ -1,7 +1,10 @@
-//! Shared UI components for the app.
+//! Shared, reusable UI components for the app.
 
-mod home_screen;
-pub use home_screen::HomeScreen;
+mod confirm_dialog;
+pub use confirm_dialog::ConfirmDialog;
 
-mod recorder_controls;
-pub use recorder_controls::RecorderControls;
+mod icons;
+pub use icons::{IconBack, IconChevronRight, IconMic, IconMicOff, IconSettings, IconShield, IconTrash};
+
+mod recording_row;
+pub use recording_row::RecordingRow;
