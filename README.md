@@ -59,13 +59,20 @@ lift in Phase 2 below.
 ## Roadmap
 
 ### Phase 0 — Project setup
-- [ ] `dx new` a Dioxus 0.7 project with mobile targets enabled
-- [ ] Get an empty screen running on an Android emulator and an iOS
-      simulator
-- [ ] Add mic permission to `AndroidManifest.xml` (`RECORD_AUDIO`) and
-      `Info.plist` (`NSMicrophoneUsageDescription`)
+- [x] `dx new` a Dioxus 0.7 project with mobile targets enabled
+- [x] Get an empty screen running on an iOS simulator and a real iPhone
+      (see [app/README.md](app/README.md)). Android emulator not set up yet
+      (Android Studio/SDK install still pending — iOS was the immediate
+      target).
+- [x] Add mic permission via the unified `[permissions]` block in
+      `app/Dioxus.toml`, which the dx 0.7.10 CLI maps to both
+      `Info.plist` (`NSMicrophoneUsageDescription`) and
+      `AndroidManifest.xml` (`RECORD_AUDIO`) at build time.
 - [ ] Build the runtime permission-request flow (Android runtime dialog,
-      iOS first-use prompt)
+      iOS first-use prompt) — deferred to Phase 1: this fires automatically
+      the first time `cpal` opens an input stream, once
+      `NSMicrophoneUsageDescription` is set (already done above), so
+      there's nothing to build here independent of the cpal wiring below.
 
 ### Phase 1 — Mic capture on-device
 - [ ] Add cpal; confirm it opens the default input device on a **real**
@@ -129,12 +136,19 @@ lift in Phase 2 below.
 4. Android: enable Developer Mode + USB debugging on the phone, plug it
    in, run `dx serve --platform android`. No signing account needed for a
    local debug install
-5. iOS: plug the iPhone in, run `dx serve --platform ios`. The first time,
-   open the generated Xcode project once to select your Personal Team
-   under Signing & Capabilities, then on the phone go to Settings >
-   General > VPN & Device Management to trust the developer certificate
-6. A free Apple ID signs apps for **7 days**. When it expires, re-run
-   `dx serve --platform ios` (or rebuild in Xcode) to refresh it. Android
+5. iOS: `dx` (0.7.10) can't request a provisioning profile from Apple by
+   itself — only Xcode can. One-time bootstrap: create a throwaway Xcode
+   project (File > New > Project > iOS > App) with **Bundle Identifier**
+   set to exactly `bundle.identifier` from `app/Dioxus.toml`
+   (`com.rahulkumar.conversationcapture`) and Team set to your Personal
+   Team, run it once on the real iPhone (Product > Destination > pick the
+   phone > ⌘R), then trust the dev cert on the phone under Settings >
+   General > VPN & Device Management. That caches a provisioning profile
+   `dx` reuses from then on. See [app/README.md](app/README.md) for the
+   exact commands to build/install/launch after that.
+6. A free Apple ID signs apps for **7 days**. When `dx build`/`dx serve`
+   starts failing with a codesigning error again, redo step 5's Xcode run
+   once (bundle ID is already set, so it's quick) to refresh it. Android
    installs have no such expiry.
 
 ## Open decisions to revisit
