@@ -127,6 +127,21 @@ lift in Phase 2 below.
 - [ ] Tag segments by role or topic (doctor vs. patient), decide whether
       this is rule-based, a small classifier, or an LLM call on the
       transcript
+- [ ] **Future scope: multi-speaker diarization** ("who spoke when" across
+      3+ people, not just doctor/patient). This is a distinct technique
+      from transcription, not a byproduct of it:
+      1. A small speaker-embedding model (ECAPA-TDNN/x-vector/d-vector
+         style) converts short rolling audio windows into a fixed-size
+         "voiceprint" vector, independent of what's being said.
+      2. Cluster embeddings — segments with similar voiceprints get grouped
+         under an anonymous label (Speaker 1/2/3); the speaker count can be
+         given or estimated from the clustering itself.
+      3. Optional named identification is a separate step on top: an
+         enrollment flow (record a short reference sample per known
+         person) to match new voiceprints against.
+      Needs a second on-device model imported the same way as Moonshine
+      (via `burn-onnx`) plus a clustering step — real added scope, not
+      free from Phase 2's transcription work.
 - [ ] Surface tagged segments in the UI (collapsible sections,
       highlighting)
 
